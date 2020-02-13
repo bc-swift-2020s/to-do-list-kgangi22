@@ -10,7 +10,7 @@ import UIKit
 
 class ToDoListViewController: UIViewController {
     
-   
+    
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -24,6 +24,34 @@ class ToDoListViewController: UIViewController {
         super.viewDidLoad()
         tableView.dataSource = self
         tableView.delegate = self
+        loadData()
+    }
+    
+    func loadData(){
+        let directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentURL = directoryURL.appendingPathComponent("todos").appendingPathExtension("json")
+        guard let data = try? Data(contentsOf: documentURL) else{return}
+        let jsonDecoder = JSONDecoder()
+        do{
+            toDoItems = try jsonDecoder.decode(Array<ToDoItem>.self, from: data)
+            tableView.reloadData()
+        } catch{
+             print("Error")
+        }
+        
+        
+    }
+    
+    func saveData(){
+        let directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentURL = directoryURL.appendingPathComponent("todos").appendingPathExtension("json")
+        let jsonEncoder = JSONEncoder()
+        let data = try? jsonEncoder.encode(toDoItems)
+        do{
+            try data?.write(to: documentURL, options: .noFileProtection)
+        }catch {
+            print("Error")
+        }
         
     }
     
@@ -51,6 +79,7 @@ class ToDoListViewController: UIViewController {
             tableView.scrollToRow(at: newIndexPath, at: .bottom, animated: true)
             
         }
+        saveData()
     }
     
     
@@ -99,6 +128,7 @@ extension ToDoListViewController: UITableViewDelegate, UITableViewDataSource {
         if editingStyle == .delete{
             toDoItems.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
+            saveData()
         }
     }
     
@@ -106,6 +136,7 @@ extension ToDoListViewController: UITableViewDelegate, UITableViewDataSource {
         let itemToMove = toDoItems[sourceIndexPath.row]
         toDoItems.remove(at: sourceIndexPath.row)
         toDoItems.insert(itemToMove, at: destinationIndexPath.row)
+        saveData()
     }
     
     
