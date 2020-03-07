@@ -6,29 +6,56 @@
 //  Copyright © 2020 Kyle Gangi. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import UserNotifications
 
 struct LocalNotificationManager {
     
-    static func authorizeLocalNotifications() {
-         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error)
-             in
-             guard error == nil else{
-                 print("Error: \(error!.localizedDescription)")
-                 return
-             }
-             if granted {
-                 print("Notification Authorization Granted")
-                 
-                 
-             } else{
-                 print("The User has denied notifications")
-                 //TODO: Put an alert in here telling the user what to do
-                 
-             }
-         }
-     }
+    static func authorizeLocalNotifications(viewController: UIViewController) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error)
+            in
+            guard error == nil else{
+                print("Error: \(error!.localizedDescription)")
+                return
+            }
+            if granted {
+                print("Notification Authorization Granted")
+                
+                
+            } else{
+                print("The User has denied notifications")
+                
+                DispatchQueue.main.async {
+                    viewController.oneButtonAlert(title: "User Has Not Allowed Notifications", message: "To recieve alerts for reminders, open the Settings App, select To Do List > Notifications > Allow Notifications")
+                }
+                
+                
+            }
+        }
+    }
+    
+    static func isAuthorized(completed: @escaping (Bool) -> () ) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { (granted, error)
+            in
+            guard error == nil else{
+                print("Error: \(error!.localizedDescription)")
+                completed(false)
+                return
+            }
+            if granted {
+                print("Notification Authorization Granted")
+                completed(true)
+                
+                
+            } else{
+                print("The User has denied notifications")
+                completed(false)
+                
+
+                
+            }
+        }
+    }
     
     static func setCalendarNotification(title: String, subtitle: String, body: String, badgeNumber: NSNumber?, sound: UNNotificationSound?, date: Date) -> String {
         //create content
@@ -57,7 +84,7 @@ struct LocalNotificationManager {
                 print("Notification scheduled \(notificationID), title \(content.title)")
             }
         }
-    return notificationID
+        return notificationID
         
     }
     
